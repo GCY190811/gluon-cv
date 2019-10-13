@@ -93,11 +93,11 @@ def parse_args():
 
 def get_dataset(dataset, args):
     if dataset.lower() == 'voc':
-        train_dataset = gdata.VOCDetection(
+        train_dataset = gdata.VOCDetection(       #? 数据格式
             splits=[(2007, 'trainval'), (2012, 'trainval')])
         val_dataset = gdata.VOCDetection(
-            splits=[(2007, 'test')])
-        val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=val_dataset.classes)
+            splits=[(2007, 'test')])  #?数据格式
+        val_metric = VOC07MApMetric(iou_thresh=0.5, class_names=val_dataset.classes)  
     elif dataset.lower() == 'coco':
         train_dataset = gdata.COCODetection(splits='instances_train2017', use_crowd=False)
         val_dataset = gdata.COCODetection(splits='instances_val2017', skip_empty=False)
@@ -109,7 +109,7 @@ def get_dataset(dataset, args):
     if args.num_samples < 0:
         args.num_samples = len(train_dataset)
     if args.mixup:
-        from gluoncv.data import MixupDetection
+        from gluoncv.data import MixupDetection  #    mixup 仅仅处理训练集
         train_dataset = MixupDetection(train_dataset)
     return train_dataset, val_dataset, val_metric
 
@@ -228,14 +228,14 @@ def train(net, train_data, val_data, eval_metric, ctx, args):
     logger.info(args)
     logger.info('Start training from [Epoch {}]'.format(args.start_epoch))
     best_map = [0]
-    for epoch in range(args.start_epoch, args.epochs):
+    for epoch in range(args.start_epoch, args.epochs): # 在一个epoch开始的时候，进行mixup
         if args.mixup:
             # TODO(zhreshold): more elegant way to control mixup during runtime
             try:
                 train_data._dataset.set_mixup(np.random.beta, 1.5, 1.5)
             except AttributeError:
                 train_data._dataset._data.set_mixup(np.random.beta, 1.5, 1.5)
-            if epoch >= args.epochs - args.no_mixup_epochs:
+            if epoch >= args.epochs - args.no_mixup_epochs:  # 最后几个epoch不进行mixup
                 try:
                     train_data._dataset.set_mixup(None)
                 except AttributeError:
@@ -325,7 +325,9 @@ if __name__ == '__main__':
             async_net.initialize()
 
     # training data
-    train_dataset, val_dataset, eval_metric = get_dataset(args.dataset, args)
+    train_dataset, val_dataset, eval_metric = get_dataset(args.dataset, args) #拿数据，进行了mixup 
+    # 数据迭代器每张图片， label: [[xmin, ymin, xmax, ymax, cls_id, difficult, weight],]
+
     train_data, val_data = get_dataloader(
         async_net, train_dataset, val_dataset, args.data_shape, args.batch_size, args.num_workers, args)
 

@@ -28,7 +28,7 @@ class VOCDetection(VisionDataset):
         A function that takes data and label and transforms them. Refer to
         :doc:`./transforms` for examples.
 
-        A transform function for object detection should take label into consideration,
+        A transform function for object detection should take label into consideration, #对于图像的处理， 应该同步到标签上。
         because any geometric modification will require label to be modified.
     index_map : dict, default None
         In default, the 20 classes are mapped into indices from 0 to 19. We can
@@ -124,7 +124,7 @@ class VOCDetection(VisionDataset):
                 self._validate_label(xmin, ymin, xmax, ymax, width, height)
             except AssertionError as e:
                 raise RuntimeError("Invalid label at {}, {}".format(anno_path, e))
-            label.append([xmin, ymin, xmax, ymax, cls_id, difficult])
+            label.append([xmin, ymin, xmax, ymax, cls_id, difficult])  #类别标签6类
         return np.array(label)
 
     def _validate_label(self, xmin, ymin, xmax, ymax, width, height):
